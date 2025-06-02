@@ -36,7 +36,7 @@ export const signup = async (req, res) => {
 			secure: process.env.NODE_ENV === "production",
 			sameSite: "none",
 			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-			domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined
+			domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined
 		});
 
 		res.status(201).json({
@@ -92,7 +92,7 @@ export const login = async (req, res) => {
 			secure: process.env.NODE_ENV === "production",
 			sameSite: "none",
 			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-			domain: process.env.NODE_ENV === "production" ? ".onrender.com" : undefined
+			domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined
 		});
 
 		res.json({
