@@ -14,41 +14,6 @@ const errorResponse = (res, status, message) => {
   });
 };
 
-// Check Authentication Route
-router.get('/check-auth', async (req, res) => {
-  try {
-    const token = req.cookies.token || req.cookies.access_token;
-    
-    if (!token) {
-      return errorResponse(res, 401, 'Not authenticated');
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Find user
-    const user = await User.findById(decoded.userId).select('-password');
-    if (!user) {
-      return errorResponse(res, 401, 'User not found');
-    }
-
-    res.json({ 
-      success: true,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role
-      }
-    });
-
-  } catch (error) {
-    console.error('Auth check error:', error);
-    errorResponse(res, 401, 'Invalid token');
-  }
-});
-
 // Signup Route
 router.post('/signup', async (req, res) => {
   try {
@@ -125,7 +90,7 @@ router.post('/login', async (req, res) => {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      domain: process.env.NODE_ENV === 'production' ? '.vercel.app' : undefined
+      domain: process.env.NODE_ENV === 'production' ? 'looksnlove-frontend.vercel.app' : undefined
     });
 
     res.json({ 
