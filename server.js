@@ -22,10 +22,23 @@ app.use(cookieParser());
 
 // CORS configuration
 app.use(cors({
-  origin: ['https://looksnlove-frontend.vercel.app', 'http://localhost:5173'],
+  origin: function(origin, callback) {
+    const allowedOrigins = [
+      'https://looksnlove-frontend.vercel.app',
+      'https://looksnlove.co.in',
+      'https://www.looksnlove.co.in',
+      'http://localhost:5173'
+    ];
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error('The CORS policy for this site does not allow access from the specified Origin.'), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'Origin', 'Accept'],
   exposedHeaders: ['Set-Cookie'],
   preflightContinue: false,
   optionsSuccessStatus: 204

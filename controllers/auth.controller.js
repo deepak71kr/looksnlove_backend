@@ -37,7 +37,13 @@ export const signup = async (req, res) => {
 			sameSite: "none",
 			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 			path: "/",
-			domain: process.env.NODE_ENV === "production" ? "looksnlove-frontend.vercel.app" : undefined
+			domain: process.env.NODE_ENV === "production" 
+				? (req.headers.origin?.includes('vercel.app') 
+					? 'looksnlove-frontend.vercel.app' 
+					: req.headers.origin?.includes('www.') 
+						? 'www.looksnlove.co.in' 
+						: 'looksnlove.co.in')
+				: undefined
 		});
 
 		res.status(201).json({
@@ -94,7 +100,13 @@ export const login = async (req, res) => {
 			sameSite: "none",
 			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
 			path: "/",
-			domain: process.env.NODE_ENV === "production" ? "looksnlove-frontend.vercel.app" : undefined
+			domain: process.env.NODE_ENV === "production" 
+				? (req.headers.origin?.includes('vercel.app') 
+					? 'looksnlove-frontend.vercel.app' 
+					: req.headers.origin?.includes('www.') 
+						? 'www.looksnlove.co.in' 
+						: 'looksnlove.co.in')
+				: undefined
 		});
 
 		res.json({
