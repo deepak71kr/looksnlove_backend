@@ -22,7 +22,7 @@ app.use(cookieParser());
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: ['https://looksnlove-frontend.vercel.app', 'http://localhost:5173'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -41,6 +41,11 @@ app.use('/api/home-stats', homeStatsRoutes);
 app.use('/api/users/profile', profileRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ status: 'ok' });
+});
 
 // Start server
 const PORT = process.env.PORT || 5000;
