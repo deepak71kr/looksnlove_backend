@@ -200,6 +200,23 @@ router.get('/check-auth', auth, async (req, res) => {
       });
     }
     
+    // Generate new token
+    const token = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    // Set cookie again to refresh it
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      path: "/",
+      domain: process.env.NODE_ENV === 'production' ? '.looksnlove.co.in' : undefined
+    });
+    
     res.json({ 
       success: true, 
       isAuthenticated: true,
