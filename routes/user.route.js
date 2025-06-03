@@ -84,20 +84,14 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    // Set cookie
-    res.cookie("token", token, {
+    // Set secure cookie
+    res.cookie('token', token, {
       httpOnly: true,
       secure: true,
-      sameSite: "none",
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       path: "/",
-      domain: process.env.NODE_ENV === "production" 
-        ? (req.headers.origin?.includes('vercel.app') 
-          ? 'looksnlove-frontend.vercel.app' 
-          : req.headers.origin?.includes('www.') 
-            ? 'www.looksnlove.co.in' 
-            : 'looksnlove.co.in')
-        : undefined
+      domain: process.env.NODE_ENV === 'production' ? '.looksnlove.co.in' : undefined
     });
 
     res.json({ 
@@ -193,6 +187,37 @@ router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.clearCookie('access_token');
   res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// Check Auth Status Route
+router.get('/check-auth', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select('-password');
+    if (!user) {
+      return res.json({ 
+        success: false, 
+        isAuthenticated: false 
+      });
+    }
+    
+    res.json({ 
+      success: true, 
+      isAuthenticated: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Check auth error:', error);
+    res.json({ 
+      success: false, 
+      isAuthenticated: false 
+    });
+  }
 });
 
 export default router;
