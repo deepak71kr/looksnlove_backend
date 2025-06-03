@@ -22,13 +22,15 @@ app.use(cookieParser());
 
 // CORS configuration
 app.use(cors({
-  origin: ['https://looksnlove-frontend.vercel.app', 'http://localhost:5173'],
+  origin: [
+    'http://localhost:5173',
+    'https://looksnlove.co.in',
+    'https://www.looksnlove.co.in'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204
+  exposedHeaders: ['Set-Cookie']
 }));
 
 // Connect to MongoDB
