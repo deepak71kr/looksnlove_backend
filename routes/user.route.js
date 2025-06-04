@@ -93,21 +93,25 @@ router.post('/login', async (req, res) => {
       path: "/"
     });
 
-    res.json({ 
+    // Send response with user data
+    const userData = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role
+    };
+
+    // Send response
+    return res.json({ 
       success: true,
       message: 'Login successful',
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role
-      }
+      user: userData
     });
 
   } catch (error) {
     console.error('Login error:', error);
-    errorResponse(res, 500, 'Internal server error');
+    return errorResponse(res, 500, 'Internal server error');
   }
 });
 
@@ -201,7 +205,9 @@ router.post('/logout', (req, res) => {
 // Check Auth Status Route
 router.get('/check-auth', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password');
+    // Get user from auth middleware
+    const user = req.user;
+    
     if (!user) {
       res.clearCookie('token');
       return res.json({ 
@@ -210,7 +216,7 @@ router.get('/check-auth', auth, async (req, res) => {
         message: 'User not found'
       });
     }
-    
+
     // Generate new token
     const token = jwt.sign(
       { userId: user._id },
@@ -241,7 +247,7 @@ router.get('/check-auth', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Check auth error:', error);
-    res.clearCookie('token');
+    // Don't clear cookie on error, just return not authenticated
     return res.json({ 
       success: false, 
       isAuthenticated: false,
