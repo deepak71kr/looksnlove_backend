@@ -87,11 +87,10 @@ router.post('/login', async (req, res) => {
     // Set secure cookie
     res.cookie('token', token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: "/",
-      domain: process.env.NODE_ENV === 'production' ? '.looksnlove.co.in' : undefined
+      path: "/"
     });
 
     res.json({ 
@@ -184,9 +183,19 @@ router.post('/reset-password', async (req, res) => {
 
 // Logout Route
 router.post('/logout', (req, res) => {
-  res.clearCookie('token');
-  res.clearCookie('access_token');
-  res.json({ success: true, message: 'Logged out successfully' });
+  try {
+    res.clearCookie('token');
+    res.json({ 
+      success: true, 
+      message: 'Logged out successfully' 
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+    res.json({ 
+      success: false, 
+      message: 'Error during logout' 
+    });
+  }
 });
 
 // Check Auth Status Route
@@ -194,9 +203,11 @@ router.get('/check-auth', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.userId).select('-password');
     if (!user) {
+      res.clearCookie('token');
       return res.json({ 
         success: false, 
-        isAuthenticated: false 
+        isAuthenticated: false,
+        message: 'User not found'
       });
     }
     
@@ -210,11 +221,10 @@ router.get('/check-auth', auth, async (req, res) => {
     // Set cookie again to refresh it
     res.cookie('token', token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: "/",
-      domain: process.env.NODE_ENV === 'production' ? '.looksnlove.co.in' : undefined
+      path: "/"
     });
     
     res.json({ 
@@ -230,9 +240,11 @@ router.get('/check-auth', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Check auth error:', error);
+    res.clearCookie('token');
     res.json({ 
       success: false, 
-      isAuthenticated: false 
+      isAuthenticated: false,
+      message: 'Authentication check failed'
     });
   }
 });

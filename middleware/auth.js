@@ -28,6 +28,8 @@ export const auth = async (req, res, next) => {
       next();
     } catch (error) {
       console.error('Token verification error:', error);
+      // Clear invalid token
+      res.clearCookie('token');
       return res.status(401).json({ 
         success: false,
         message: 'Token is not valid' 
