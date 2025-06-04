@@ -227,7 +227,8 @@ router.get('/check-auth', auth, async (req, res) => {
       path: "/"
     });
     
-    res.json({ 
+    // Send response with user data
+    return res.json({ 
       success: true, 
       isAuthenticated: true,
       user: {
@@ -241,7 +242,7 @@ router.get('/check-auth', auth, async (req, res) => {
   } catch (error) {
     console.error('Check auth error:', error);
     res.clearCookie('token');
-    res.json({ 
+    return res.json({ 
       success: false, 
       isAuthenticated: false,
       message: 'Authentication check failed'
