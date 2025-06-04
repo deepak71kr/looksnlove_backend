@@ -84,13 +84,14 @@ router.post('/login', async (req, res) => {
       { expiresIn: '7d' }
     );
 
-    // Set secure cookie
+    // Set secure cookie with domain
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: "/"
+      path: "/",
+      domain: process.env.COOKIE_DOMAIN || '.looksnlove.co.in' // Use your domain
     });
 
     // Send response with user data
@@ -188,7 +189,10 @@ router.post('/reset-password', async (req, res) => {
 // Logout Route
 router.post('/logout', (req, res) => {
   try {
-    res.clearCookie('token');
+    res.clearCookie('token', {
+      domain: process.env.COOKIE_DOMAIN || '.looksnlove.co.in',
+      path: "/"
+    });
     res.json({ 
       success: true, 
       message: 'Logged out successfully' 
@@ -209,7 +213,10 @@ router.get('/check-auth', auth, async (req, res) => {
     const user = req.user;
     
     if (!user) {
-      res.clearCookie('token');
+      res.clearCookie('token', {
+        domain: process.env.COOKIE_DOMAIN || '.looksnlove.co.in',
+        path: "/"
+      });
       return res.json({ 
         success: false, 
         isAuthenticated: false,
@@ -227,10 +234,11 @@ router.get('/check-auth', auth, async (req, res) => {
     // Set cookie again to refresh it
     res.cookie('token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      path: "/"
+      path: "/",
+      domain: process.env.COOKIE_DOMAIN || '.looksnlove.co.in'
     });
     
     // Send response with user data
@@ -247,7 +255,6 @@ router.get('/check-auth', auth, async (req, res) => {
     });
   } catch (error) {
     console.error('Check auth error:', error);
-    // Don't clear cookie on error, just return not authenticated
     return res.json({ 
       success: false, 
       isAuthenticated: false,
