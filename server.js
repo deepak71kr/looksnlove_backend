@@ -13,6 +13,7 @@ import serviceRoutes from './routes/services.route.js';
 import homeStatsRoutes from './routes/homeStats.js';
 import orderRoutes from './routes/order.route.js';
 import profileRoutes from './routes/profile.route.js';
+import comboRoutes from './routes/combo.route.js';
 import mongoose from 'mongoose';
 
 // Load environment variables
@@ -57,6 +58,7 @@ app.use('/api/home-stats', homeStatsRoutes);
 app.use('/api/users/profile', profileRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/combos', comboRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
