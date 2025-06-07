@@ -1,30 +1,20 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const cartItemSchema = new mongoose.Schema({
-  serviceName: {
-    type: String,
+  service: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Service',
     required: true
   },
-  category: {
-    type: String,
-    required: true
-  },
-  price: {
+  quantity: {
     type: Number,
-    required: true
-  },
-  date: {
-    type: Date,
-    required: true
-  },
-  time: {
-    type: String,
-    required: true
+    required: true,
+    min: 1
   }
 });
 
 const cartSchema = new mongoose.Schema({
-  userId: {
+  user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -38,4 +28,17 @@ const cartSchema = new mongoose.Schema({
   timestamps: true
 });
 
-module.exports = mongoose.model('Cart', cartSchema); 
+// Calculate total before saving
+cartSchema.pre('save', function(next) {
+  this.total = this.items.reduce((sum, item) => {
+    return sum + (item.service.price * item.quantity);
+  }, 0);
+  next();
+});
+
+// Add index for faster queries
+cartSchema.index({ user: 1 });
+
+const Cart = mongoose.model('Cart', cartSchema);
+
+export default Cart; 

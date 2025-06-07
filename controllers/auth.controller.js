@@ -2,11 +2,19 @@ import User from "../models/User.js";
 import jwt from "jsonwebtoken";
 import { sendPasswordEmail } from "../utils/emailSender.js";
 
+// Basic cookie options
+const cookieOptions = {
+	httpOnly: true,
+	secure: process.env.NODE_ENV === 'production',
+	sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+	path: "/",
+	maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+};
+
 export const signup = async (req, res) => {
 	try {
 		const { name, email, password, phone } = req.body;
 
-		// Check if user already exists
 		const existingUser = await User.findOne({ email });
 		if (existingUser) {
 			return res.status(400).json({ 
@@ -15,30 +23,13 @@ export const signup = async (req, res) => {
 			});
 		}
 
-		// Create new user with plain password
-		const user = new User({
-			name,
-			email,
-			password,
-			phone
-		});
-
+		const user = new User({ name, email, password, phone });
 		await user.save();
 
-		// Create token
 		const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
 			expiresIn: "7d"
 		});
-
-		// Set cookie
-		res.cookie("token", token, {
-			httpOnly: true,
-			secure: true,
-			sameSite: "none",
-			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-			path: "/",
-			domain: process.env.NODE_ENV === "production" ? "looksnlove-frontend.vercel.app" : undefined
-		});
+		res.cookie("token", token, cookieOptions);
 
 		res.status(201).json({
 			success: true,
@@ -52,11 +43,11 @@ export const signup = async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error("Error in signup: ", error.message);
+		console.error('Signup error:', error);
 		res.status(500).json({ 
 			success: false,
-			message: "Error creating user", 
-			error: error.message 
+			message: "Error creating user",
+			error: process.env.NODE_ENV === 'development' ? error.message : undefined
 		});
 	}
 };
@@ -65,37 +56,18 @@ export const login = async (req, res) => {
 	try {
 		const { email, password } = req.body;
 
-		// Check if user exists
 		const user = await User.findOne({ email });
-		if (!user) {
+		if (!user || password !== user.password) {
 			return res.status(400).json({ 
 				success: false,
 				message: "Invalid credentials" 
 			});
 		}
 
-		// Direct password comparison
-		if (password !== user.password) {
-			return res.status(400).json({ 
-				success: false,
-				message: "Invalid credentials" 
-			});
-		}
-
-		// Create token
 		const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
 			expiresIn: "7d"
 		});
-
-		// Set cookie
-		res.cookie("token", token, {
-			httpOnly: true,
-			secure: true,
-			sameSite: "none",
-			maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-			path: "/",
-			domain: process.env.NODE_ENV === "production" ? "looksnlove-frontend.vercel.app" : undefined
-		});
+		res.cookie("token", token, cookieOptions);
 
 		res.json({
 			success: true,
@@ -109,17 +81,17 @@ export const login = async (req, res) => {
 			}
 		});
 	} catch (error) {
-		console.error("Error in login controller:", error);
+		console.error('Login error:', error);
 		res.status(500).json({ 
 			success: false,
-			message: "Error logging in", 
-			error: error.message 
+			message: "Error logging in",
+			error: process.env.NODE_ENV === 'development' ? error.message : undefined
 		});
 	}
 };
 
 export const logout = (req, res) => {
-	res.clearCookie("token");
+	res.clearCookie("token", cookieOptions);
 	res.json({ 
 		success: true,
 		message: "Logged out successfully" 
@@ -132,7 +104,8 @@ export const checkAuth = async (req, res) => {
 		if (!token) {
 			return res.status(401).json({ 
 				success: false,
-				message: "Not authenticated" 
+				isAuthenticated: false,
+				message: "Not authenticated"
 			});
 		}
 
@@ -140,9 +113,11 @@ export const checkAuth = async (req, res) => {
 		const user = await User.findById(decoded.userId);
 
 		if (!user) {
+			res.clearCookie("token", cookieOptions);
 			return res.status(401).json({ 
 				success: false,
-				message: "User not found" 
+				isAuthenticated: false,
+				message: "User not found"
 			});
 		}
 
@@ -158,9 +133,13 @@ export const checkAuth = async (req, res) => {
 			}
 		});
 	} catch (error) {
+		console.error('Check auth error:', error);
+		res.clearCookie("token", cookieOptions);
 		res.status(401).json({ 
 			success: false,
-			message: "Invalid token" 
+			isAuthenticated: false,
+			message: "Not authenticated",
+			error: process.env.NODE_ENV === 'development' ? error.message : undefined
 		});
 	}
 };
@@ -168,44 +147,32 @@ export const checkAuth = async (req, res) => {
 export const forgotPassword = async (req, res) => {
 	try {
 		const { email } = req.body;
-
 		if (!email) {
-			return res.status(400).json({
+			return res.status(400).json({ 
 				success: false,
-				message: "Email is required"
+				message: "Email is required" 
 			});
 		}
 
-		// Find user
 		const user = await User.findOne({ email });
 		if (!user) {
-			return res.status(404).json({
+			return res.status(404).json({ 
 				success: false,
-				message: "Email not registered"
+				message: "Email not registered" 
 			});
 		}
 
-		try {
-			// Send account details email
-			await sendPasswordEmail(user.email, user.password, user.phone);
-			
-			res.json({
-				success: true,
-				message: "Account details have been sent to your email"
-			});
-		} catch (emailError) {
-			console.error("Error sending account details email:", emailError);
-			return res.status(500).json({
-				success: false,
-				message: "Failed to send account details. Please try again later."
-			});
-		}
-
+		await sendPasswordEmail(user.email, user.password, user.phone);
+		res.json({ 
+			success: true,
+			message: "Account details have been sent to your email" 
+		});
 	} catch (error) {
-		console.error("Forgot password error:", error);
-		res.status(500).json({
+		console.error('Forgot password error:', error);
+		res.status(500).json({ 
 			success: false,
-			message: "Failed to process request"
+			message: "Failed to process request",
+			error: process.env.NODE_ENV === 'development' ? error.message : undefined
 		});
 	}
 };
