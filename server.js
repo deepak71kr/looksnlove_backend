@@ -33,11 +33,9 @@ app.use((req, res, next) => {
 
 // CORS configuration
 app.use(cors({
-  origin: [
-    'https://looksnlove.co.in',
-    'https://www.looksnlove.co.in',
-    'http://localhost:5173'
-  ],
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://looksnlove.co.in', 'https://www.looksnlove.co.in']
+    : 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'Cookie', 'X-Requested-With', 'Accept'],

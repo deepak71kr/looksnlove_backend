@@ -8,7 +8,6 @@ const cookieOptions = {
 	secure: true, // Always true for production
 	sameSite: 'none', // Required for cross-site cookies
 	path: "/",
-	domain: '.looksnlove.co.in', // Your domain
 	maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
 };
 
