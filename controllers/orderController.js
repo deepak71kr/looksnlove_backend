@@ -6,7 +6,67 @@ import mongoose from 'mongoose';
 // Create new order
 export const createOrder = async (req, res) => {
   try {
+    console.log('Create order request received:', {
+      body: req.body,
+      user: req.user?._id,
+      headers: req.headers
+    });
+
     const { items, total, customerDetails, deliveryDate, deliveryTime, additionalInstructions } = req.body;
+
+    // Validate required fields
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      console.error('Invalid items in request:', items);
+      return res.status(400).json({
+        success: false,
+        message: 'Items array is required and must not be empty'
+      });
+    }
+
+    if (!customerDetails) {
+      console.error('Missing customer details in request');
+      return res.status(400).json({
+        success: false,
+        message: 'Customer details are required'
+      });
+    }
+
+    if (!deliveryDate || !deliveryTime) {
+      console.error('Missing delivery information:', { deliveryDate, deliveryTime });
+      return res.status(400).json({
+        success: false,
+        message: 'Delivery date and time are required'
+      });
+    }
+
+    // Validate items
+    for (const item of items) {
+      if (!item._id || !item.quantity) {
+        console.error('Invalid item in request:', item);
+        return res.status(400).json({
+          success: false,
+          message: 'Each item must have an ID and quantity'
+        });
+      }
+
+      // Verify service exists
+      const service = await Service.findById(item._id);
+      if (!service) {
+        console.error('Service not found:', item._id);
+        return res.status(404).json({
+          success: false,
+          message: `Service not found: ${item._id}`
+        });
+      }
+    }
+
+    console.log('Creating order with validated data:', {
+      userId: req.user._id,
+      itemCount: items.length,
+      total,
+      deliveryDate,
+      deliveryTime
+    });
 
     // Create order
     const order = new Order({
@@ -21,13 +81,23 @@ export const createOrder = async (req, res) => {
     });
 
     await order.save();
+    console.log('Order created successfully:', {
+      orderId: order._id,
+      userId: order.userId,
+      status: order.status
+    });
 
     res.status(201).json({
       success: true,
       data: order
     });
   } catch (error) {
-    console.error('Create order error:', error);
+    console.error('Create order error:', {
+      error: error.message,
+      stack: error.stack,
+      requestBody: req.body,
+      userId: req.user?._id
+    });
     res.status(500).json({
       success: false,
       message: 'Error creating order',
