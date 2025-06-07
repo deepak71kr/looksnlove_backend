@@ -1,5 +1,6 @@
 import Cart from '../models/Cart.js';
 import Service from '../models/Service.js';
+import mongoose from 'mongoose';
 
 // Get cart
 export const getCart = async (req, res) => {
@@ -48,8 +49,18 @@ export const addToCart = async (req, res) => {
     console.log('Add to cart request received:', {
       body: req.body,
       user: req.user?._id,
-      headers: req.headers
+      headers: req.headers,
+      auth: req.headers.authorization
     });
+
+    // Validate user authentication
+    if (!req.user?._id) {
+      console.error('No authenticated user found');
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required'
+      });
+    }
 
     const { serviceId, quantity = 1 } = req.body;
 
@@ -58,6 +69,15 @@ export const addToCart = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Service ID is required'
+      });
+    }
+
+    // Validate service ID format
+    if (!mongoose.Types.ObjectId.isValid(serviceId)) {
+      console.error('Invalid service ID format:', serviceId);
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid service ID format'
       });
     }
 
@@ -164,7 +184,8 @@ export const addToCart = async (req, res) => {
       error: error.message,
       stack: error.stack,
       requestBody: req.body,
-      userId: req.user?._id
+      userId: req.user?._id,
+      headers: req.headers
     });
     res.status(500).json({
       success: false,
