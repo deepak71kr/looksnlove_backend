@@ -22,7 +22,8 @@ export const getCart = async (req, res) => {
 
     // Calculate total
     const total = cart.items.reduce((sum, item) => {
-      return sum + (item.product.price * item.quantity);
+      const price = item.product.price || (item.product.prices && item.product.prices[0]) || 0;
+      return sum + (price * item.quantity);
     }, 0);
 
     res.status(200).json({
@@ -85,7 +86,8 @@ export const addToCart = async (req, res) => {
 
     // Calculate total
     const total = updatedCart.items.reduce((sum, item) => {
-      return sum + (item.product.price * item.quantity);
+      const price = item.product.price || (item.product.prices && item.product.prices[0]) || 0;
+      return sum + (price * item.quantity);
     }, 0);
 
     res.status(200).json({
@@ -150,7 +152,8 @@ export const updateCartItem = async (req, res) => {
 
     // Calculate total
     const total = updatedCart.items.reduce((sum, item) => {
-      return sum + (item.product.price * item.quantity);
+      const price = item.product.price || (item.product.prices && item.product.prices[0]) || 0;
+      return sum + (price * item.quantity);
     }, 0);
 
     res.status(200).json({
@@ -198,7 +201,8 @@ export const removeFromCart = async (req, res) => {
 
     // Calculate total
     const total = updatedCart.items.reduce((sum, item) => {
-      return sum + (item.product.price * item.quantity);
+      const price = item.product.price || (item.product.prices && item.product.prices[0]) || 0;
+      return sum + (price * item.quantity);
     }, 0);
 
     res.status(200).json({

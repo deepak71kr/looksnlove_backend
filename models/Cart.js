@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 const cartItemSchema = new mongoose.Schema({
-  service: {
+  product: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Service',
     required: true
@@ -31,7 +31,7 @@ const cartSchema = new mongoose.Schema({
 // Calculate total before saving
 cartSchema.pre('save', function(next) {
   this.total = this.items.reduce((sum, item) => {
-    return sum + (item.service.price * item.quantity);
+    return sum + (item.product.price * item.quantity);
   }, 0);
   next();
 });
