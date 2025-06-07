@@ -47,9 +47,17 @@ export const addToCart = async (req, res) => {
   try {
     const { serviceId, quantity = 1 } = req.body;
 
+    if (!serviceId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Service ID is required'
+      });
+    }
+
     // Validate service
     const service = await Service.findById(serviceId);
     if (!service) {
+      console.error('Service not found:', serviceId);
       return res.status(404).json({
         success: false,
         message: 'Service not found'
@@ -81,7 +89,7 @@ export const addToCart = async (req, res) => {
     const updatedCart = await Cart.findById(cart._id)
       .populate({
         path: 'items.product',
-        select: 'name price images'
+        select: 'name price prices images'
       });
 
     // Calculate total
@@ -101,7 +109,8 @@ export const addToCart = async (req, res) => {
     console.error('Add to cart error:', error);
     res.status(500).json({
       success: false,
-      message: 'Error adding to cart'
+      message: 'Error adding to cart',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 };
