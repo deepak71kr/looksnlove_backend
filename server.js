@@ -23,7 +23,7 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cookieParser());
+app.use(cookieParser(process.env.COOKIE_SECRET));
 
 // Request logging middleware
 app.use((req, res, next) => {
